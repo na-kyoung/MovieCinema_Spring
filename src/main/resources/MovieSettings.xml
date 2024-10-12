@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd">
+	
+	<context:component-scan base-package="com.movie.impl"></context:component-scan>
+	<context:component-scan base-package="com.movie.service"></context:component-scan>
+	
+	<!-- 영화 데이터 생성 -->
+	<bean id="movie1" class="com.movie.impl.MovieDTO"
+		p:mNo="m001" p:mName="The Greatest Showman" p:mDirector="Michael Gracey" p:mRatings="12" />
+
+	<bean id="movie2" class="com.movie.impl.MovieDTO"
+		p:mNo="m002" p:mName="Elemental" p:mDirector="Peter Sohn" p:mRatings="0" />
+
+	<bean id="movie3" class="com.movie.impl.MovieDTO"
+		p:mNo="m003" p:mName="Get Out" p:mDirector="Jordan Peele" p:mRatings="15" />
+
+	
+	<!-- advice 객체 생성 -->
+	<bean id="insertMovieAdvice" class="com.movie.service.InsertMovieAdvice" />
+	<bean id="ageViolationAdvice" class="com.movie.service.AgeViolationAdvice" />
+	<bean id="movieInfoAdvice" class="com.movie.service.MovieInfoAdvice" />
+	<bean id="selectedMovieAdvice" class="com.movie.service.SelectedMovieAdvice" />
+	
+	<!-- 위빙 -->
+	<aop:config>
+		<aop:pointcut expression="execution(* com.movie.service..*Impl.insertMovie(..))" id="insertPointcut"/>
+		<aop:pointcut expression="execution(* com.movie.service..*Impl.selectMovie(..))" id="selectPointcut" />
+		<aop:pointcut expression="execution(* com.movie.service..*Impl.playMovie(..))" id="playPointcut" />
+		
+<!--  		<aop:aspect ref="insertMovieAdvice">
+			<aop:after method="insertMovieAdvice" pointcut-ref="insertPointcut" />
+		</aop:aspect> -->
+		
+    	<aop:aspect ref="selectedMovieAdvice">
+			<aop:after-returning method="selectedMovieAdvice" pointcut-ref="selectPointcut" returning="returnObj" />
+		</aop:aspect>
+		
+ 		<aop:aspect ref="movieInfoAdvice">
+			<aop:around method="movieInfoAdvice" pointcut-ref="playPointcut" />
+		</aop:aspect>
+		
+		<aop:aspect ref="ageViolationAdvice">
+			<aop:after-throwing method="ageViolationAdvice" pointcut-ref="playPointcut" throwing="exceptObj" />
+		</aop:aspect>
+	</aop:config>
+
+</beans>
